@@ -3,63 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz HTA - 60 Questions - 30 Minutes</title>
+    <title>Quiz HTA - Test</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #764ba2 100%);
-            min-height: 100vh;
+            margin: 0;
             padding: 20px;
+            min-height: 100vh;
         }
-        
         .container {
-            max-width: 900px;
+            max-width: 800px;
             margin: 0 auto;
             background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #1e3c72 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 1.2em;
-            opacity: 0.9;
-        }
-        
-        .timer {
-            font-size: 1.5em;
-            font-weight: bold;
-            margin-top: 15px;
-            padding: 10px 20px;
-            background: rgba(255,255,255,0.2);
-            border-radius: 8px;
-            display: inline-block;
-        }
-        
-        .timer.warning {
-            background: #ff6b6b;
-            color: white;
-        }
-        
-        .content {
             padding: 40px;
-            min-height: 500px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
+        h1 { color: #1e3c72; }
+        input { padding: 10px; width: 100%; font-size: 16px; }
+        button { background: #1e3c72; color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; margin-top: 20px; }
+        button:hover { background: #764ba2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ Quiz HTA - Page Test</h1>
+        <p>Si vous voyez ce texte, c'est bon !</p>
+        <input type="text" placeholder="Entrez votre nom" id="nameInput">
+        <button onclick="alert('Hello ' + document.getElementById('nameInput').value)">Tester le bouton</button>
+    </div>
+</body>
+</html>
