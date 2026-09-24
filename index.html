@@ -244,13 +244,13 @@
             const percentage = Math.round((score / questions.length) * 100);
             const timestamp = new Date().toLocaleString('fr-FR');
             const emailMessage = 'RÉSULTATS DU QUIZ HTA\n\nDélégué : ' + userName + '\nDate : ' + timestamp + '\nScore : ' + score + '/60 (' + percentage + '%)';
-            const formData = new FormData();
-            formData.append('name', userName);
-            formData.append('score', score + '/60');
-            formData.append('message', emailMessage);
-            fetch('https://formspree.io/f/xwpelbza', { method: 'POST', body: formData })
-            .then(function() { showEmailStatus('✅ Résultats envoyés !', true); })
-            .catch(function() { showEmailStatus('Erreur d\'envoi', false); });
+            
+            document.getElementById('formName').value = userName;
+            document.getElementById('formScore').value = score + '/60';
+            document.getElementById('formMessage').value = emailMessage;
+            
+            document.getElementById('formspreeForm').submit();
+            showEmailStatus('✅ Résultats envoyés !', true);
         }
 
         function showEmailStatus(message, isSuccess) {
@@ -259,5 +259,12 @@
             statusDiv.textContent = message;
         }
     </script>
+    
+    <!-- Form Formspree cachée pour soumission POST -->
+    <form id="formspreeForm" action="https://formspree.io/f/xwpelbza" method="POST" style="display:none;">
+        <input type="hidden" name="name" id="formName">
+        <input type="hidden" name="score" id="formScore">
+        <input type="hidden" name="message" id="formMessage">
+    </form>
 </body>
 </html>
