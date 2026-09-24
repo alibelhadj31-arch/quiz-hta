@@ -96,7 +96,9 @@
                     <div class="bareme-item basic"><span>30-44 : Bases Acquises</span></div>
                     <div class="bareme-item poor"><span>0-29 : À Consolider</span></div>
                 </div>
-                <div id="emailStatus"></div>
+                <div style="text-align:center; margin-top:30px;">
+                    <button class="btn" onclick="printResults()">🖨️ Imprimer les résultats</button>
+                </div>
             </div>
         </div>
     </div>
@@ -223,7 +225,6 @@
             document.getElementById('quizScreen').style.display = 'none';
             document.getElementById('resultsScreen').style.display = 'block';
             calculateResults();
-            sendEmail();
         }
 
         function calculateResults() {
@@ -236,44 +237,9 @@
             document.getElementById('scorePercent').textContent = percentage + '%';
         }
 
-        function sendEmail() {
-            let score = 0;
-            for (let i = 0; i < userAnswers.length; i++) {
-                if (userAnswers[i] === questions[i].ans) score++;
-            }
-            const percentage = Math.round((score / questions.length) * 100);
-            const timestamp = new Date().toLocaleString('fr-FR');
-            const emailMessage = 'RÉSULTATS DU QUIZ HTA\n\nDélégué : ' + userName + '\nDate : ' + timestamp + '\nScore : ' + score + '/60 (' + percentage + '%)';
-            
-            const formData = new FormData();
-            formData.append('name', userName);
-            formData.append('score', score + '/60');
-            formData.append('message', emailMessage);
-            
-            fetch('https://formspree.io/f/xwpelbza', { 
-                method: 'POST', 
-                body: formData
-            })
-            .then(function(response) { 
-                showEmailStatus('✅ Résultats envoyés !', true);
-            })
-            .catch(function(error) { 
-                showEmailStatus('Erreur d\'envoi', false);
-            });
-        }
-
-        function showEmailStatus(message, isSuccess) {
-            const statusDiv = document.getElementById('emailStatus');
-            statusDiv.className = isSuccess ? 'email-status' : 'email-status error';
-            statusDiv.textContent = message;
+        function printResults() {
+            window.print();
         }
     </script>
-    
-    <!-- Form Formspree cachée pour soumission POST -->
-    <form id="formspreeForm" action="https://formspree.io/f/xwpelbza" method="POST" style="display:none;">
-        <input type="hidden" name="name" id="formName">
-        <input type="hidden" name="score" id="formScore">
-        <input type="hidden" name="message" id="formMessage">
-    </form>
 </body>
 </html>
