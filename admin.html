@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Résultats Quiz HTA</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', Tahoma, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #764ba2 100%); min-height: 100vh; padding: 15px; }
+.container { max-width: 1100px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+.header { background: linear-gradient(135deg, #1e3c72 0%, #764ba2 100%); color: white; padding: 25px; text-align: center; }
+.header h1 { font-size: 1.8em; }
+.content { padding: 25px; }
+.login { text-align: center; max-width: 320px; margin: 40px auto; }
+.login input { width: 100%; padding: 12px; font-size: 1em; border: 2px solid #ddd; border-radius: 6px; margin: 15px 0; }
+.btn { background: linear-gradient(135deg, #1e3c72 0%, #764ba2 100%); color: white; border: none; padding: 12px 25px; font-size: 1em; border-radius: 8px; cursor: pointer; margin: 5px; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.toolbar input { padding: 10px; border: 2px solid #ddd; border-radius: 6px; flex: 1; min-width: 180px; }
+.stats { color: #1e3c72; font-weight: bold; margin-bottom: 15px; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.92em; }
+th { background: #1e3c72; color: white; padding: 10px 8px; text-align: left; white-space: nowrap; }
+td { padding: 9px 8px; border-bottom: 1px solid #e5e5e5; white-space: nowrap; }
+tr:nth-child(even) td { background: #f8f9ff; }
+.n1 { color: #28a745; font-weight: bold; } .n2 { color: #1e3c72; font-weight: bold; }
+.n3 { color: #e0a800; font-weight: bold; } .n4 { color: #dc3545; font-weight: bold; }
+.msg { text-align: center; padding: 30px; color: #666; }
+.err { color: #dc3545; margin-top: 10px; }
+.print-title { display: none; }
+@media print {
+  body { background: white; padding: 0; }
+  .container { box-shadow: none; border-radius: 0; }
+  .header, .toolbar, .no-print { display: none !important; }
+  .print-title { display: block; text-align: center; margin-bottom: 15px; color: #000; }
+  th { background: #ddd !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  td, th { white-space: normal; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header"><h1>🔒 Administration - Quiz HTA</h1></div>
+  <div class="content">
+
+    <div class="login" id="loginBox">
+      <p>Entrez le mot de passe administrateur :</p>
+      <input type="password" id="pwd" placeholder="Mot de passe" onkeydown="if(event.key==='Enter')login()">
+      <button class="btn" onclick="login()">Entrer</button>
+      <div class="err" id="loginErr"></div>
+    </div>
+
+    <div id="adminBox" style="display:none;">
+      <div class="print-title">
+        <h2>Résultats Quiz HTA - Formation délégués</h2>
+        <p id="printDate"></p>
+      </div>
+      <div class="toolbar">
+        <input type="text" id="search" placeholder="🔍 Rechercher un délégué..." oninput="render()">
+        <div>
+          <button class="btn" onclick="loadResults()">🔄 Actualiser</button>
+          <button class="btn" onclick="printPage()">🖨️ Imprimer</button>
+        </div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr>
+            <th>Date</th><th>Délégué</th><th>Score</th><th>%</th><th>Niveau</th>
+            <th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>Durée</th>
+          </tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <div class="msg" id="msg">Chargement...</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ⚠️ Mot de passe admin : modifiable ici
+var ADMIN_PASSWORD = 'hta2026';
+
+var SUPABASE_URL = 'https://iwyhclopgxvyyzvvksoi.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_EY25XK5xwrs66VDd7naDJQ_1vTYLc_U';
+var results = [];
+
+function login() {
+  if (document.getElementById('pwd').value === ADMIN_PASSWORD) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('adminBox').style.display = 'block';
+    loadResults();
+  } else {
+    document.getElementById('loginErr').textContent = 'Mot de passe incorrect';
+  }
+}
+
+function loadResults() {
+  document.getElementById('msg').textContent = 'Chargement...';
+  document.getElementById('msg').style.display = 'block';
+  fetch(SUPABASE_URL + '/rest/v1/quiz_resultats?select=*&order=created_at.desc', {
+    headers: { 'apikey': SUPABASE_KEY }
+  })
+  .then(function(r) {
+    if (!r.ok) throw new Error('Erreur ' + r.status);
+    return r.json();
+  })
+  .then(function(data) { results = data; render(); })
+  .catch(function(e) { document.getElementById('msg').textContent = '❌ Impossible de charger les résultats (' + e.message + ')'; });
+}
+
+function niveauClass(n) {
+  if (n === 'Maîtrise Complète') return 'n1';
+  if (n === 'Bon Niveau') return 'n2';
+  if (n === 'Bases Acquises') return 'n3';
+  return 'n4';
+}
+
+function esc(t) {
+  var d = document.createElement('div');
+  d.textContent = t == null ? '' : String(t);
+  return d.innerHTML;
+}
+
+function render() {
+  var q = document.getElementById('search').value.toLowerCase().trim();
+  var list = results.filter(function(r) { return !q || (r.nom || '').toLowerCase().indexOf(q) !== -1; });
+  var html = '';
+  var sum = 0;
+  for (var i = 0; i < list.length; i++) {
+    var r = list[i];
+    sum += r.score || 0;
+    var d = new Date(r.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    html += '<tr><td>' + d + '</td><td><strong>' + esc(r.nom) + '</strong></td><td>' + r.score + '/60</td><td>' + r.pourcentage + '%</td>'
+      + '<td class="' + niveauClass(r.niveau) + '">' + esc(r.niveau) + '</td>'
+      + '<td>' + r.module1 + '/15</td><td>' + r.module2 + '/15</td><td>' + r.module3 + '/15</td><td>' + r.module4 + '/15</td><td>' + esc(r.duree) + '</td></tr>';
+  }
+  document.getElementById('tbody').innerHTML = html;
+  var msg = document.getElementById('msg');
+  if (list.length === 0) { msg.textContent = 'Aucun résultat pour le moment.'; msg.style.display = 'block'; }
+  else { msg.style.display = 'none'; }
+  document.getElementById('stats').textContent = list.length + ' délégué(s)' + (list.length ? ' — Moyenne : ' + (sum / list.length).toFixed(1) + '/60' : '');
+}
+
+function printPage() {
+  document.getElementById('printDate').textContent = 'Imprimé le ' + new Date().toLocaleString('fr-FR') + ' — ' + document.getElementById('stats').textContent;
+  window.print();
+}
+</script>
+</body>
+</html>
