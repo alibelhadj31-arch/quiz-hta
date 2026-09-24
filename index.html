@@ -245,12 +245,21 @@
             const timestamp = new Date().toLocaleString('fr-FR');
             const emailMessage = 'RÉSULTATS DU QUIZ HTA\n\nDélégué : ' + userName + '\nDate : ' + timestamp + '\nScore : ' + score + '/60 (' + percentage + '%)';
             
-            document.getElementById('formName').value = userName;
-            document.getElementById('formScore').value = score + '/60';
-            document.getElementById('formMessage').value = emailMessage;
+            const formData = new FormData();
+            formData.append('name', userName);
+            formData.append('score', score + '/60');
+            formData.append('message', emailMessage);
             
-            document.getElementById('formspreeForm').submit();
-            showEmailStatus('✅ Résultats envoyés !', true);
+            fetch('https://formspree.io/f/xwpelbza', { 
+                method: 'POST', 
+                body: formData
+            })
+            .then(function(response) { 
+                showEmailStatus('✅ Résultats envoyés !', true);
+            })
+            .catch(function(error) { 
+                showEmailStatus('Erreur d\'envoi', false);
+            });
         }
 
         function showEmailStatus(message, isSuccess) {
