@@ -96,9 +96,7 @@
                     <div class="bareme-item basic"><span>30-44 : Bases Acquises</span></div>
                     <div class="bareme-item poor"><span>0-29 : À Consolider</span></div>
                 </div>
-                <div style="text-align:center; margin-top:30px;">
-                    <button class="btn" onclick="printResults()">🖨️ Imprimer les résultats</button>
-                </div>
+                <div id="sendStatus" style="text-align:center; margin-top:30px; font-size:1.1em; font-weight:bold; color:#1e3c72;">⏳ Transmission des résultats au formateur...</div>
             </div>
         </div>
     </div>
@@ -225,6 +223,7 @@
             document.getElementById('quizScreen').style.display = 'none';
             document.getElementById('resultsScreen').style.display = 'block';
             calculateResults();
+            sendResults();
         }
 
         function calculateResults() {
@@ -237,8 +236,41 @@
             document.getElementById('scorePercent').textContent = percentage + '%';
         }
 
-        function printResults() {
-            window.print();
+        // ⚠️ Paramètres Supabase (mêmes que l'appli Suivi Visites)
+        var SUPABASE_URL = 'https://iwyhclopgxvyyzvvksoi.supabase.co';
+        var SUPABASE_KEY = 'sb_publishable_EY25XK5xwrs66VDd7naDJQ_1vTYLc_U';
+
+        function sendResults() {
+            var total = 0;
+            var mods = [0, 0, 0, 0];
+            for (var i = 0; i < questions.length; i++) {
+                if (userAnswers[i] === questions[i].ans) { total++; mods[questions[i].module - 1]++; }
+            }
+            var niveau = total >= 54 ? 'Maîtrise Complète' : total >= 45 ? 'Bon Niveau' : total >= 30 ? 'Bases Acquises' : 'À Consolider';
+            var used = 30 * 60 - timeRemaining;
+            var row = {
+                nom: userName,
+                score: total,
+                pourcentage: Math.round(total / 60 * 100),
+                niveau: niveau,
+                module1: mods[0], module2: mods[1], module3: mods[2], module4: mods[3],
+                duree: Math.floor(used / 60) + ' min ' + (used % 60) + ' s'
+            };
+            fetch(SUPABASE_URL + '/rest/v1/quiz_resultats', {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Content-Type': 'application/json',
+                    'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(row)
+            })
+            .then(function(r) {
+                document.getElementById('sendStatus').textContent = r.ok
+                    ? '✅ Résultats transmis au formateur. Merci !'
+                    : '❌ Échec de transmission (' + r.status + '). Prévenez le formateur.';
+            })
+            .catch(function() { document.getElementById('sendStatus').textContent = '❌ Échec de transmission. Prévenez le formateur.'; });
         }
     </script>
 </body>
